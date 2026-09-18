@@ -1,0 +1,77 @@
+[project]
+name = "dPyStatus"
+dynamic = ["version"]
+description = "A lightweight GET /status HTTP endpoint for discord.py bots."
+readme = "README.md"
+authors = [{ name = "Paul Bayfield" }]
+requires-python = ">=3.13"
+keywords = ["discord", "discord.py", "status", "healthcheck", "monitoring"]
+classifiers = [
+    "Framework :: AsyncIO",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+dependencies = [
+    "aiohttp>=3.14.3",
+    "discord-py>=2.5.2",
+]
+
+[project.urls]
+"Homepage" = "https://bayfield.dev"
+"Repository" = "https://github.com/PaulBayfield/dPyStatus"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/dPyStatus/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dPyStatus"]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff==0.16.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+lint.select = [
+    "E", # pycodestyle errors (bad indentation, missing whitespace, etc.)
+    "W", # pycodestyle warnings (trailing whitespace, tabs vs spaces, etc.)
+    "F", # pyflakes (undefined variables, unused imports, etc.)
+    "I", # isort (import order and grouping)
+    "N", # pep8-naming (function, variable, class naming conventions)
+    "Q", # flake8-quotes (single vs double quotes consistency)
+    "D", # docstring checks (pydocstyle)
+]
+lint.ignore = [
+    "E203", # whitespace before ':' (conflicts with Black formatting)
+    "D100", # ignore module docstrings
+    "D200", # one-line docstring should fit on one line with quotes
+    "D212", # multi-line docstring summary should not be on the first line
+    "D401", # first line should be in imperative mood
+    "N818", # exception name should end with Error
+    "N999", # invalid module name (the package is intentionally named dPyStatus)
+]
+line-length = 120
+target-version = "py313"
+indent-width = 4
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
