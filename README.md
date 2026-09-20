@@ -1,18 +1,51 @@
-# dPyStatus
+<div align="center">
+  <img src="./assets/banner.jpg" alt="dPyStatus" />
 
-A lightweight `GET /status` HTTP endpoint for [discord.py](https://github.com/Rapptz/discord.py) bots.
+  # dPyStatus
 
-It runs an [aiohttp](https://docs.aiohttp.org) server inside the bot's own event loop (no thread, no extra dependency:
-aiohttp already ships with discord.py) and exposes the bot's stats as JSON, so an external service can tell whether
-the bot is online.
+  **A lightweight `GET /status` HTTP endpoint for discord.py bots.**
 
-## Installation
+  [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+  [![Python](https://img.shields.io/badge/Python-3.13-blue)](https://www.python.org/)
+  [![discord.py](https://img.shields.io/badge/discord.py-2.5%2B-5865F2)](https://github.com/Rapptz/discord.py)
+</div>
+
+## 📋 • Table of Contents
+
+- [📖 • Overview](#--overview)
+- [📦 • Installation](#--installation)
+- [🚀 • Usage](#--usage)
+  - [As an extension](#as-an-extension-configured-through-environment-variables)
+  - [As a cog](#as-a-cog-explicit-options)
+  - [Standalone](#standalone)
+  - [Extra values](#extra-values)
+  - [Examples](#examples)
+- [📡 • Response](#--response)
+- [💻 • Development](#--development)
+- [🏭 • Used in production](#--used-in-production)
+- [🙌 • Credits](#--credits)
+- [📄 • License](#--license)
+
+## 📖 • Overview
+
+dPyStatus runs an [aiohttp](https://docs.aiohttp.org) server inside the bot's own event loop (no thread, no extra
+dependency: aiohttp already ships with [discord.py](https://github.com/Rapptz/discord.py)) and exposes the bot's stats
+as JSON, so an external service can tell whether the bot is online.
+
+Key features:
+- A single `GET /status` route answering `200` when the bot is ready, `503` when it is not
+- Shard-aware: per-shard latency, guild count and connection state
+- Optional bearer token authentication
+- Your own values exposed under `extra`, from sync or async callbacks
+- Three ways to plug it in: extension, cog or standalone server
+
+## 📦 • Installation
 
 ```sh
 uv add git+https://github.com/PaulBayfield/dPyStatus
 ```
 
-## Usage
+## 🚀 • Usage
 
 ### As an extension (configured through environment variables)
 
@@ -20,13 +53,13 @@ uv add git+https://github.com/PaulBayfield/dPyStatus
 await bot.load_extension("dPyStatus.extension")
 ```
 
-| Variable               | Default     | Description                                               |
-| ---------------------- | ----------- | --------------------------------------------------------- |
-| `DPYSTATUS_HOST`       | `127.0.0.1` | Interface to bind. Use `0.0.0.0` in Docker.               |
-| `DPYSTATUS_PORT`       | `8080`      | Port to listen on.                                        |
-| `DPYSTATUS_PATH`       | `/status`   | Route of the endpoint.                                    |
+| Variable               | Default     | Description                                                 |
+| ---------------------- | ----------- | ----------------------------------------------------------- |
+| `DPYSTATUS_HOST`       | `127.0.0.1` | Interface to bind. Use `0.0.0.0` in Docker.                 |
+| `DPYSTATUS_PORT`       | `8080`      | Port to listen on.                                          |
+| `DPYSTATUS_PATH`       | `/status`   | Route of the endpoint.                                      |
 | `DPYSTATUS_TOKEN`      | _none_      | If set, requests must send `Authorization: Bearer <token>`. |
-| `DPYSTATUS_ACCESS_LOG` | `false`     | Log every request.                                        |
+| `DPYSTATUS_ACCESS_LOG` | `false`     | Log every request.                                          |
 
 ### As a cog (explicit options)
 
@@ -87,12 +120,14 @@ status.remove_extra("restaurants")
 
 See [`examples/`](examples):
 
-- [`extension.py`](examples/extension.py): load the extension, configured by environment variables.
-- [`cog.py`](examples/cog.py): add the cog with explicit options and register extra values.
-- [`standalone.py`](examples/standalone.py): `StatusServer` as a context manager with an `AutoShardedClient`.
-- [`check.py`](examples/check.py): query the endpoint from an external service (exit code 0 if up).
+| File | Description |
+|---|---|
+| [`extension.py`](examples/extension.py) | Load the extension, configured by environment variables. |
+| [`cog.py`](examples/cog.py) | Add the cog with explicit options and register extra values. |
+| [`standalone.py`](examples/standalone.py) | `StatusServer` as a context manager with an `AutoShardedClient`. |
+| [`check.py`](examples/check.py) | Query the endpoint from an external service (exit code 0 if up). |
 
-## Response
+## 📡 • Response
 
 `GET /status` (and `HEAD /status`) answers:
 
@@ -132,10 +167,68 @@ See [`examples/`](examples):
 - IDs are strings (they do not fit in a JavaScript number).
 - `latency_ms` and `uptime` are `null` until the bot has connected.
 
-## Development
+## 💻 • Development
 
 ```sh
 uv sync
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
+```
+
+## 🏭 • Used in production
+
+dPyStatus powers the health endpoint of the [CROUStillant](https://croustillant.menu) Discord bot
+([CROUStillantBot](https://github.com/CROUStillant-Developpement/CROUStillantBot)), where it is loaded as an extension
+and enriched with a few `extra` values (maintenance flag, database connectivity and cache sizes):
+
+```python
+await self.load_extension("dPyStatus.extension")
+
+status = self.get_cog("dPyStatus").server
+
+
+@status.extra
+def maintenance() -> bool:
+    return self.maintenance
+
+
+@status.extra
+async def database() -> bool:
+    return await self.entities.pool.fetchval("SELECT TRUE")
+
+
+@status.extra
+def cache() -> dict[str, int]:
+    return {
+        "regions": len(self.cache.regions),
+        "restaurants": len(self.cache.restaurants),
+    }
+```
+
+Using dPyStatus somewhere else? Open a pull request and add your project here.
+
+## 🙌 • Credits
+
+| Person | Role |
+|---|---|
+| [Paul Bayfield](https://github.com/PaulBayfield) | Author & Maintainer |
+
+## 📄 • License
+
+dPyStatus is licensed under the [Apache 2.0 License](LICENSE).
+
+```
+Copyright 2026 Paul Bayfield
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
